@@ -51,5 +51,6 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "LiminalHALLS2.sln"
+    "dotnet.defaultSolution": "LiminalHalls.sln",
+    "dotnet.preferCSharpExtension": true
 }

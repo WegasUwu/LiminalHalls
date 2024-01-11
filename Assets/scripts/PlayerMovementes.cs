@@ -4,21 +4,25 @@ using UnityEngine;
 
 public class PlayerMovementes : MonoBehaviour
 {
+    public FoodBarScript foodbar;
+    //public FoodHunger foodhunger1;
     [SerializeField] Transform orientation;
     public float jumpForce = 5f;
     float playerHeight = 2f;
-    
+
 
 
     [Header("Movement")]
     public float moveSpeed = 6f;
     [SerializeField] float airMultiplier = 0.4f;
     public float movementMultiplier = 10f;
+    public float sprint = 15f;
+    public bool IsSprinting = false;
 
     [Header("Keybinds")]
     [SerializeField] KeyCode jumpKey = KeyCode.Space;
 
-    [Header ("Drag")]
+    [Header("Drag")]
     public float groundDrag = 8f;
     public float airDrag = 4f;
 
@@ -38,7 +42,7 @@ public class PlayerMovementes : MonoBehaviour
 
     private bool onSlope()
     {
-        if (Physics.Raycast(transform.position, Vector3.down, out slopeHit, playerHeight / 2 + 0f))
+        if (Physics.Raycast(transform.position, Vector3.down, out slopeHit, playerHeight / 2 + 2f))
         {
             if (slopeHit.normal != Vector3.up)
             {
@@ -61,16 +65,30 @@ public class PlayerMovementes : MonoBehaviour
 
     private void Update()
     {
-        isGrounded = Physics.CheckSphere(transform.position - new Vector3 (0, 1, 0), groundDistance, groundMask);
+        isGrounded = Physics.CheckSphere(transform.position - new Vector3(0, 1, 0), groundDistance, groundMask);
         MyInput();
         ControlDrag();
 
         if (Input.GetKeyDown(jumpKey) && isGrounded)
         {
             jump();
+            
         }
 
         slopeMoveDirection = Vector3.ProjectOnPlane(moveDirection, slopeHit.normal);
+
+        if (Input.GetKeyDown(KeyCode.LeftShift))
+        {
+            moveSpeed += sprint;
+            IsSprinting = true;
+            FoodHunger.timeX = 0.65f;
+        }
+        if (Input.GetKeyUp(KeyCode.LeftShift))
+        {
+            moveSpeed -= sprint;
+            IsSprinting = false;
+            FoodHunger.timeX = 1f;
+        }
 
     }
     void ControlDrag()
@@ -98,22 +116,28 @@ public class PlayerMovementes : MonoBehaviour
     }
     void MovePlayer()
     {
-        if (isGrounded && !onSlope())
-        {
-            rb.AddForce(moveDirection.normalized * moveSpeed * movementMultiplier, ForceMode.Acceleration);
-        }
-        else if (isGrounded && onSlope())
-        {
-            rb.AddForce(slopeMoveDirection.normalized * moveSpeed * movementMultiplier, ForceMode.Acceleration);
-        }
-        else if (!isGrounded)
+        if (!isGrounded)
         {
             rb.AddForce(moveDirection.normalized * moveSpeed * movementMultiplier * airMultiplier, ForceMode.Acceleration);
+        }
+
+        else
+        {
+            if (!onSlope())
+            {
+                rb.AddForce(moveDirection.normalized * moveSpeed * movementMultiplier, ForceMode.Acceleration);
+            }
+            else
+            {
+                rb.AddForce(slopeMoveDirection.normalized * moveSpeed * movementMultiplier, ForceMode.Acceleration);
+            }
         }
     }
 
     void jump()
     {
         rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
+        //FoodHunger.currentFood -= 1;
+        //foodbar.SetFood(FoodHunger.currentFood);
     }
 }
