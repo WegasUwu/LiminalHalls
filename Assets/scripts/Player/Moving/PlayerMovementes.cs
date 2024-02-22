@@ -4,11 +4,13 @@ using UnityEngine;
 
 public class PlayerMovementes : MonoBehaviour
 {
-    public FoodBarScript foodbar;
     //public FoodHunger foodhunger1;
     [SerializeField] Transform orientation;
-    public float jumpForce = 5f;
+    public float jumpForce = 60f;
+    public float jetForce = 45f;
     float playerHeight = 2f;
+    public float flyingForward = 15f;
+    public float flyingUp = 10f;
 
 
 
@@ -18,6 +20,7 @@ public class PlayerMovementes : MonoBehaviour
     public float movementMultiplier = 10f;
     public float sprint = 15f;
     public bool IsSprinting = false;
+    public int fuel = 3000;
 
     [Header("Keybinds")]
     [SerializeField] KeyCode jumpKey = KeyCode.Space;
@@ -25,6 +28,7 @@ public class PlayerMovementes : MonoBehaviour
     [Header("Drag")]
     public float groundDrag = 8f;
     public float airDrag = 4f;
+    public float gravitytest = 2f;
 
     float horMove;
     float vertMove;
@@ -69,10 +73,26 @@ public class PlayerMovementes : MonoBehaviour
         MyInput();
         ControlDrag();
 
+
+
         if (Input.GetKeyDown(jumpKey) && isGrounded)
         {
             jump();
-            
+        }
+        else if (Input.GetKey(jumpKey) && !isGrounded && fuel > 0)
+        {
+            fuelSpend();
+            airDrag = 2.5f;
+            moveSpeed = 500f;
+        }
+        else
+        {
+            airDrag = -0.015f;
+            moveSpeed = 45f;
+        }
+        if (isGrounded && fuel<=3000)
+        {
+            fuel += 5;
         }
 
         slopeMoveDirection = Vector3.ProjectOnPlane(moveDirection, slopeHit.normal);
@@ -81,13 +101,11 @@ public class PlayerMovementes : MonoBehaviour
         {
             moveSpeed += sprint;
             IsSprinting = true;
-            FoodHunger.timeX = 0.65f;
         }
         if (Input.GetKeyUp(KeyCode.LeftShift))
         {
             moveSpeed -= sprint;
             IsSprinting = false;
-            FoodHunger.timeX = 1f;
         }
 
     }
@@ -113,6 +131,7 @@ public class PlayerMovementes : MonoBehaviour
     private void FixedUpdate()
     {
         MovePlayer();
+        rb.AddForce(Physics.gravity, ForceMode.Acceleration);
     }
     void MovePlayer()
     {
@@ -137,7 +156,18 @@ public class PlayerMovementes : MonoBehaviour
     void jump()
     {
         rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
-        //FoodHunger.currentFood -= 1;
-        //foodbar.SetFood(FoodHunger.currentFood);
+
+    }
+
+    public void fuelSpend()
+    {
+        
+        if (fuel > 0)
+        {
+            //var flyDir = Vector3.up * flyingUp + orientation.forward * flyingForward;
+            //rb.AddForce(flyDir, ForceMode.Acceleration);
+            rb.AddForce(Vector3.up * jetForce, ForceMode.Acceleration);
+            fuel -= 1;
+        }
     }
 }
